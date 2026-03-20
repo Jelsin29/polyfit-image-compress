@@ -29,3 +29,7 @@ Thumbs.db
 
 # Colab
 .colab/
+
+# Internal development docs
+DOCS/
+.claude/
