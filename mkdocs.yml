@@ -1,14 +1,37 @@
 site_name: polyfit-image-compress
 site_description: Image compression via polynomial surface fitting
+site_url: https://jelsin29.github.io/polyfit-image-compress/
 repo_url: https://github.com/Jelsin29/polyfit-image-compress
+repo_name: Jelsin29/polyfit-image-compress
 
 theme:
   name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
 
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - API Reference: api/
+  - API Reference:
+    - Compressor: api/compressor.md
+    - Models: api/models.md
+    - Metrics: api/metrics.md
+    - I/O: api/io.md
+    - Visualization: api/visualization.md
+    - Quantum: api/quantum.md
 
 plugins:
   - search
@@ -16,3 +39,13 @@ plugins:
       handlers:
         python:
           paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - admonition
+  - toc:
+      permalink: true
