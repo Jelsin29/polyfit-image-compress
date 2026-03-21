@@ -21,7 +21,9 @@ class PolynomialModel(Protocol):
     def build_design_matrix(self, block_size: int) -> NDArray[np.float64]: ...
 
 
-def _make_coords(block_size: int) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+def _make_coords(
+    block_size: int,
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
     """Build flattened coordinate vectors for a block.
 
     Returns:
@@ -67,7 +69,13 @@ class QuadraticModel:
 
     def build_design_matrix(self, block_size: int) -> NDArray[np.float64]:
         ones, x_flat, y_flat = _make_coords(block_size)
-        return np.column_stack((
-            ones, x_flat, y_flat,
-            x_flat * y_flat, x_flat**2, y_flat**2,
-        ))
+        return np.column_stack(
+            (
+                ones,
+                x_flat,
+                y_flat,
+                x_flat * y_flat,
+                x_flat**2,
+                y_flat**2,
+            )
+        )
