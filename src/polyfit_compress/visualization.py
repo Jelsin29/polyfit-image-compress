@@ -38,6 +38,13 @@ def compare_images(
     Figure
         The comparison figure. Caller decides whether to show or save.
     """
+    if original.shape != reconstructed.shape:
+        raise ValueError(
+            f"Shape mismatch: original {original.shape} vs reconstructed {reconstructed.shape}"
+        )
+    if original.ndim not in (2, 3) or (original.ndim == 3 and original.shape[-1] not in (1, 3)):
+        raise ValueError("Expected 2D grayscale or 3D RGB image.")
+
     is_grayscale = original.ndim == 2
     cmap = "gray" if is_grayscale else None
 
@@ -70,7 +77,10 @@ def compare_images(
             bbox={"facecolor": "white", "alpha": 0.8, "edgecolor": "gray"},
         )
 
-    fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+    if metrics_overlay:
+        fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+    else:
+        fig.tight_layout()
 
     return fig
 
@@ -99,6 +109,13 @@ def error_heatmap(
     Figure
         The error heatmap figure. Caller decides whether to show or save.
     """
+    if original.shape != reconstructed.shape:
+        raise ValueError(
+            f"Shape mismatch: original {original.shape} vs reconstructed {reconstructed.shape}"
+        )
+    if original.ndim not in (2, 3) or (original.ndim == 3 and original.shape[-1] not in (1, 3)):
+        raise ValueError("Expected 2D grayscale or 3D RGB image.")
+
     diff = np.abs(original.astype(np.float64) - reconstructed.astype(np.float64))
 
     # For multi-channel images, average across channels

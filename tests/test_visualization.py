@@ -6,6 +6,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pytest  # noqa: E402
 from matplotlib.figure import Figure  # noqa: E402
@@ -105,7 +106,7 @@ class TestErrorHeatmap:
         fig = error_heatmap(original, reconstructed)
         axes = fig.get_axes()
         # Main axis + colorbar axis
-        assert len(axes) >= 1
+        assert len(axes) >= 2
         plt_close(fig)
 
     def test_error_heatmap_rgb(self, rgb_pair: tuple[np.ndarray, np.ndarray]) -> None:
@@ -122,9 +123,16 @@ class TestErrorHeatmap:
         assert "Mean" in stats_text
         plt_close(fig)
 
+    def test_compare_images_identical_psnr_inf(self) -> None:
+        """Identical images should handle PSNR=inf formatting."""
+        img = np.full((16, 16), 128, dtype=np.uint8)
+        fig = compare_images(img, img, metrics_overlay=True)
+        texts = [t.get_text() for t in fig.texts]
+        metrics_text = " ".join(texts)
+        assert "inf" in metrics_text.lower()
+        plt_close(fig)
+
 
 def plt_close(fig: Figure) -> None:
     """Close a figure to avoid memory leaks in tests."""
-    import matplotlib.pyplot as plt
-
     plt.close(fig)
