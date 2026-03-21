@@ -16,7 +16,7 @@ from polyfit_compress.models import LinearModel, QuadraticModel
 # Constants
 MAGIC_BYTES = b"PFIC"
 FORMAT_VERSION = 1
-HEADER_FORMAT = "<4sBIIBHBHH12s"
+HEADER_FORMAT = "<4sBIIBHBII6s"
 HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
 
 # Model type registry
@@ -82,7 +82,7 @@ class PficHeader:
             self.model_type,
             self.padding_height,
             self.padding_width,
-            b"\x00" * 12,  # reserved
+            b"\x00" * 6,  # reserved
         )
 
     @classmethod
@@ -149,12 +149,11 @@ def save_pfic(path: Path | str, result: CompressionResult) -> None:
 
     channels = 1 if result.coefficients.ndim == 2 else result.coefficients.shape[0]
 
-    # Look up model type from name
-    model_type_by_name: dict[str, int] = {
-        "linear": 0,
-        "quadratic": 1,
-    }
-    model_type = model_type_by_name[result.model_name]
+    # Look up model type from name (derived from MODEL_TYPE_MAP)
+    model_name_to_type = {cls().name: code for code, cls in MODEL_TYPE_MAP.items()}
+    model_type = model_name_to_type.get(result.model_name)
+    if model_type is None:
+        raise CorruptedFileError(f"Unknown model name: {result.model_name!r}")
 
     header = PficHeader(
         magic=MAGIC_BYTES,
@@ -213,7 +212,9 @@ def load_pfic(path: Path | str) -> tuple[PficHeader, NDArray]:
     if model_cls is None:
         raise CorruptedFileError(f"Unknown model type: {header.model_type}")
 
-    num_coeffs = model_cls().num_coefficients
+    # Note: assumes all registered models have zero-argument constructors
+    model = model_cls()
+    num_coeffs = model.num_coefficients
     n_block_rows = header.padding_height // header.block_size
     n_block_cols = header.padding_width // header.block_size
     num_blocks = n_block_rows * n_block_cols
@@ -231,6 +232,6 @@ def load_pfic(path: Path | str) -> tuple[PficHeader, NDArray]:
             f"for shape {expected_shape}, got {len(payload)} bytes"
         )
 
-    coefficients = np.frombuffer(payload, dtype=np.float32).reshape(expected_shape)
+    coefficients = np.frombuffer(payload, dtype=np.float32).reshape(expected_shape).copy()
 
     return header, coefficients

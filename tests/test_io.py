@@ -89,8 +89,9 @@ class TestPficHeader:
         packed = header.pack()
         assert packed[:4] == MAGIC_BYTES
 
-    def test_header_size_is_33(self) -> None:
+    def test_header_size_matches_format(self) -> None:
         assert HEADER_SIZE == struct.calcsize(HEADER_FORMAT)
+        assert HEADER_SIZE == 31  # expected byte count for current format
 
 
 class TestSaveLoadPfic:
@@ -166,7 +167,7 @@ class TestSaveLoadPfic:
             0,
             64,
             64,
-            b"\x00" * 12,
+            b"\x00" * 6,
         )
         path.write_bytes(header_bytes + b"\x00" * 100)
         with pytest.raises(IncompatibleVersionError, match="5"):
@@ -184,6 +185,25 @@ class TestSaveLoadPfic:
         path.write_bytes(raw[: HEADER_SIZE + 4])  # only 4 bytes of payload
 
         with pytest.raises(CorruptedFileError, match="Payload size mismatch"):
+            load_pfic(path)
+
+    def test_load_unknown_model_type_raises_corrupted(self, tmp_path) -> None:
+        path = tmp_path / "unknown_model.pfic"
+        header_bytes = struct.pack(
+            HEADER_FORMAT,
+            MAGIC_BYTES,
+            1,  # valid version
+            64,
+            64,
+            1,
+            8,
+            99,  # invalid model_type
+            64,
+            64,
+            b"\x00" * 6,
+        )
+        path.write_bytes(header_bytes + b"\x00" * 100)
+        with pytest.raises(CorruptedFileError, match="Unknown model type"):
             load_pfic(path)
 
     def test_coefficients_dtype_is_float32(self, sample_grayscale, tmp_path) -> None:

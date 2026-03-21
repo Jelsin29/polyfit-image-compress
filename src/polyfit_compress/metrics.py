@@ -32,7 +32,7 @@ def psnr(original: NDArray, compressed: NDArray, data_range: int = 255) -> float
     if error == 0:
         return float("inf")
 
-    return float(10.0 * np.log10((data_range ** 2) / error))
+    return float(10.0 * np.log10((data_range**2) / error))
 
 
 def mse(original: NDArray, compressed: NDArray) -> float:
@@ -110,12 +110,8 @@ def compression_ratio(original_bytes: int, compressed_bytes: int) -> float:
         ValueError: If compressed_bytes is zero or negative.
     """
     if original_bytes < 0:
-        raise ValueError(
-            f"original_bytes must be non-negative, got {original_bytes}"
-        )
+        raise ValueError(f"original_bytes must be non-negative, got {original_bytes}")
     if compressed_bytes <= 0:
-        raise ValueError(
-            f"compressed_bytes must be positive, got {compressed_bytes}"
-        )
+        raise ValueError(f"compressed_bytes must be positive, got {compressed_bytes}")
 
     return float(original_bytes / compressed_bytes)

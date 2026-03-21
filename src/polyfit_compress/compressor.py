@@ -117,6 +117,10 @@ class LeastSquaresCompressor:
             If coefficient dimensions don't match expected block layout.
         """
         pad_h, pad_w = padded_shape
+        if pad_h % self.block_size != 0 or pad_w % self.block_size != 0:
+            raise ValueError(
+                f"padded_shape {padded_shape} is not divisible by block_size {self.block_size}"
+            )
         n_block_rows = pad_h // self.block_size
         n_block_cols = pad_w // self.block_size
         expected_blocks = n_block_rows * n_block_cols

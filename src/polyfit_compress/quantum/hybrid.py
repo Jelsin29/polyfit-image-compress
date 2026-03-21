@@ -20,4 +20,6 @@ class HybridCompressor:
 
         Not yet implemented — coming in Phase 3.
         """
-        raise NotImplementedError("HybridCompressor.compress not yet implemented — coming in Phase 3")
+        raise NotImplementedError(
+            "HybridCompressor.compress not yet implemented — coming in Phase 3"
+        )
