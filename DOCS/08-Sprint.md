@@ -57,11 +57,11 @@ Goal: Add educational quantum computing integration with PennyLane
 
 Tasks:
 - [x] Create quantum/ subpackage with conditional PennyLane import
-- [ ] Implement VQLS solver (quantum/vqls.py)
-- [ ] Implement quantum feature maps (quantum/feature_maps.py)
-- [ ] Implement hybrid pipeline (quantum/hybrid.py)
+- [x] Implement VQLS solver (quantum/vqls.py)
+- [x] Implement quantum feature maps (quantum/feature_maps.py)
+- [x] Implement hybrid pipeline (quantum/hybrid.py)
 - [x] Add [quantum] optional dependency in pyproject.toml
-- [ ] Write quantum tests (mock device for CI)
+- [x] Write quantum tests (mock device for CI)
 - [ ] Create quantum tutorial notebook
 - [ ] Benchmark quantum vs classical (honest comparison)
 
@@ -99,7 +99,7 @@ Tasks:
 | Phase 0     | COMPLETED   | 7      | 7         |
 | Phase 1     | COMPLETED   | 11     | 11        |
 | Phase 2     | COMPLETED   | 7      | 7         |
-| Phase 3     | IN PROGRESS | 8      | 2         |
+| Phase 3     | IN PROGRESS | 8      | 6         |
 | Phase 4     | PENDING     | 9      | 0         |
 | Phase 5     | PENDING     | 6      | 0         |
-| **Total**   |             | **48** | **25**    |
+| **Total**   |             | **48** | **29**    |
