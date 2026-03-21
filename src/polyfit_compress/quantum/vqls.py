@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from polyfit_compress.quantum import require_quantum
+from polyfit_compress.quantum._guard import require_quantum
 from polyfit_compress.quantum.utils import (
     calculate_n_qubits,
     extract_coefficients,

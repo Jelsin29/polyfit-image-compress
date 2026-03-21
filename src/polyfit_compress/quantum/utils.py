@@ -69,6 +69,13 @@ def extract_coefficients(
     -------
     NDArray[np.float64]
         Real-valued polynomial coefficients.
+
+    Notes
+    -----
+    The returned coefficients are a **directional approximation** — they point
+    in the same direction as the classical least-squares solution but their
+    magnitude may differ due to the statevector normalization constraint.
+    Downstream consumers should be aware that the scale is approximate.
     """
     raw = np.real(statevector[:num_coefficients])
     return raw * norm
