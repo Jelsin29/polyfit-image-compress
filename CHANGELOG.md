@@ -6,15 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- Benchmark runner for reproducible compression benchmarks
+- GitHub Actions CI pipeline (lint, typecheck, test matrix)
+- PyPI publishing workflow
+
 ## [0.1.0] - 2026-03-22
 
 ### Added
-- Core compression library with LeastSquaresCompressor
-- Linear and Quadratic polynomial models (Strategy pattern)
-- Quality metrics: PSNR, SSIM, MSE
-- .pfic binary file format with PficHeader
-- CLI via Typer: compress, decompress, info, benchmark
-- Visualization: compare_images, error_heatmap
-- Quantum module: VQLSSolver, QuantumFeatureMap, HybridCompressor
-- Full test suite with 90%+ coverage on core modules
-- Documentation: 9 DOCS files, 2 tutorial notebooks
+- Core `LeastSquaresCompressor` with configurable block size and polynomial models
+- `LinearModel` and `QuadraticModel` implementing the `PolynomialModel` protocol
+- Quality metrics: `psnr`, `ssim`, `mse`, `compression_ratio`
+- `.pfic` binary file format with `PficHeader`, `save_pfic`, `load_pfic`
+- CLI via Typer: `polyfit compress`, `polyfit decompress`, `polyfit info`, `polyfit benchmark`
+- Visualization: `compare_images` (side-by-side), `error_heatmap`
+- Quantum module (optional, requires PennyLane):
+  - `VQLSSolver` with `StronglyEntanglingLayers` ansatz
+  - `QuantumFeatureMap` satisfying `PolynomialModel` protocol
+  - `HybridCompressor` with classical fallback
+- RGB and grayscale image support
+- Custom exceptions: `InvalidBlockSizeError`, `UnsupportedImageFormatError`, `CorruptedFileError`, `IncompatibleVersionError`
+- Comprehensive test suite (48+ tests)
+- Tutorial notebooks: original demo + quantum tutorial
+- Full documentation in `DOCS/` (9 documents)
