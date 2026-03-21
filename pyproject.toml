@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "polyfit-image-compress"
+version = "0.1.0"
+description = "Image compression using least squares polynomial surface fitting with optional quantum computing module"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Jelsin" },
+]
+keywords = ["image-compression", "polynomial-fitting", "least-squares", "quantum-computing"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "scikit-image>=0.20",
+]
+
+[project.optional-dependencies]
+quantum = ["pennylane>=0.35"]
+viz = ["matplotlib>=3.7"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+all = ["polyfit-image-compress[quantum,viz,dev]"]
+
+[project.urls]
+Homepage = "https://github.com/Jelsin29/polyfit-image-compress"
+Repository = "https://github.com/Jelsin29/polyfit-image-compress"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/polyfit_compress"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
