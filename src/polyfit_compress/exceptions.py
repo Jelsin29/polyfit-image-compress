@@ -14,4 +14,8 @@ class UnsupportedImageFormatError(PolyfitError):
 
 
 class CorruptedFileError(PolyfitError):
-    """Raised when a .pfic file is corrupted."""
+    """Raised when a .pfic file is invalid or corrupted."""
+
+
+class IncompatibleVersionError(PolyfitError):
+    """Raised when a .pfic file version is unsupported."""

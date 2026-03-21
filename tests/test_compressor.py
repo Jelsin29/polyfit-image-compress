@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from polyfit_compress.compressor import LeastSquaresCompressor, CompressionResult
-from polyfit_compress.models import LinearModel, QuadraticModel
+from polyfit_compress.compressor import CompressionResult, LeastSquaresCompressor
 from polyfit_compress.exceptions import InvalidBlockSizeError, UnsupportedImageFormatError
+from polyfit_compress.models import LinearModel, QuadraticModel
 
 
 class TestLeastSquaresCompressor:

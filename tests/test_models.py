@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from polyfit_compress.models import LinearModel, QuadraticModel, PolynomialModel
+from polyfit_compress.models import LinearModel, PolynomialModel, QuadraticModel
 
 
 class TestLinearModel:

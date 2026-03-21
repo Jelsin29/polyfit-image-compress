@@ -28,6 +28,7 @@ dependencies = [
     "numpy>=1.24",
     "scipy>=1.10",
     "scikit-image>=0.20",
+    "typer>=0.9",
 ]
 
 [project.optional-dependencies]
@@ -40,6 +41,9 @@ dev = [
     "mypy>=1.0",
 ]
 all = ["polyfit-image-compress[quantum,viz,dev]"]
+
+[project.scripts]
+polyfit = "polyfit_compress.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/Jelsin29/polyfit-image-compress"
