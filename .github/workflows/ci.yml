@@ -33,7 +33,8 @@ jobs:
           python-version: "3.12"
       - run: uv pip install --system -e ".[dev]"
       - name: mypy
-        run: mypy src/polyfit_compress/ || true  # non-blocking for now, pre-existing errors
+        run: mypy src/polyfit_compress/
+        continue-on-error: true  # non-blocking until pre-existing errors are fixed
 
   test:
     name: Test (Python ${{ matrix.python-version }})
