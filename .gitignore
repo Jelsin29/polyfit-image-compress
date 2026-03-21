@@ -32,4 +32,4 @@ Thumbs.db
 
 # Internal development docs
 DOCS/
-.claude/
+.claude/uv.lock
