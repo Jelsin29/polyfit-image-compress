@@ -47,6 +47,7 @@ def download_kodak(output_dir: Path) -> None:
             downloaded += 1
         except Exception as e:
             print(f"FAILED: {e}")
+            filepath.unlink(missing_ok=True)
 
     print(f"\nDone. Downloaded: {downloaded}, Skipped (already exist): {skipped}")
     total = len(list(output_dir.glob("kodim*.png")))
