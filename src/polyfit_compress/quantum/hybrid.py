@@ -72,7 +72,12 @@ class HybridCompressor:
         CompressionResult
             Compression result with reconstructed image and metadata.
         """
-        image = self._classical._validate_image(image)
+        from polyfit_compress.exceptions import UnsupportedImageFormatError
+
+        if image.ndim not in (2, 3) or (image.ndim == 3 and image.shape[2] not in (1, 3)):
+            raise UnsupportedImageFormatError(image.shape)
+        if image.ndim == 3 and image.shape[2] == 1:
+            image = image[:, :, 0]
         original_shape = image.shape
 
         if image.ndim == 3:
