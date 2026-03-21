@@ -30,6 +30,11 @@ Thumbs.db
 # Colab
 .colab/
 
+# Benchmark datasets and results
+benchmarks/datasets/kodak/
+benchmarks/datasets/set14/
+benchmarks/results/
+
 # Internal development docs
 DOCS/
 .claude/uv.lock
