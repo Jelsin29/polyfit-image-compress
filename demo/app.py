@@ -13,7 +13,7 @@ from polyfit_compress.metrics import mse, psnr, ssim
 def compress_image(
     image: np.ndarray,
     model_name: str,
-    block_size: int,
+    block_size: float,
 ) -> tuple[np.ndarray, np.ndarray, str]:
     """Compress an image and return results.
 
@@ -22,7 +22,11 @@ def compress_image(
     if image is None:
         raise gr.Error("Please upload an image first.")
 
-    # Convert to grayscale if needed for simplicity
+    # Drop alpha channel if RGBA
+    if image.ndim == 3 and image.shape[2] == 4:
+        image = image[:, :, :3]
+
+    # Convert to grayscale
     if image.ndim == 3:
         gray = (rgb2gray(image) * 255).astype(np.uint8)
     else:
@@ -31,9 +35,12 @@ def compress_image(
     # Select model
     model = LinearModel() if model_name == "Linear" else QuadraticModel()
 
-    # Compress
-    compressor = LeastSquaresCompressor(model=model, block_size=block_size)
-    result = compressor.compress(gray)
+    # Compress (cast block_size to int — Gradio Slider returns float)
+    try:
+        compressor = LeastSquaresCompressor(model=model, block_size=int(block_size))
+        result = compressor.compress(gray)
+    except Exception as exc:
+        raise gr.Error(str(exc)) from exc
 
     # Compute metrics
     psnr_val = psnr(gray, result.reconstructed)
@@ -47,8 +54,9 @@ def compress_image(
     )
 
     # Metrics text
+    psnr_str = f"{psnr_val:.2f} dB" if psnr_val != float("inf") else "∞ dB (lossless)"
     metrics = (
-        f"**PSNR**: {psnr_val:.2f} dB\n"
+        f"**PSNR**: {psnr_str}\n"
         f"**SSIM**: {ssim_val:.4f}\n"
         f"**MSE**: {mse_val:.2f}\n"
         f"**Compression Ratio**: {result.compression_ratio:.2f}x\n"
@@ -64,7 +72,8 @@ with gr.Blocks(title="polyfit-image-compress") as app:
     gr.Markdown(
         "# polyfit-image-compress\n"
         "Image compression via **Least Squares Polynomial Surface Fitting**\n\n"
-        "Upload an image, select a model and block size, then click Compress."
+        "Upload an image, select a model and block size, then click Compress.\n\n"
+        "_Note: images are converted to grayscale for this demo._"
     )
 
     with gr.Row():
@@ -87,7 +96,8 @@ with gr.Blocks(title="polyfit-image-compress") as app:
         with gr.Column():
             output_image = gr.Image(label="Reconstructed")
             error_image = gr.Image(label="Error Heatmap")
-            metrics_output = gr.Markdown(label="Metrics")
+            gr.Markdown("### Metrics")
+            metrics_output = gr.Markdown()
 
     compress_btn.click(
         fn=compress_image,
