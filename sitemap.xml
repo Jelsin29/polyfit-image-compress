@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/getting-started/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/api/compressor/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/api/io/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/api/metrics/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/api/models/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/api/quantum/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+    <url>
+         <loc>https://jelsin29.github.io/polyfit-image-compress/api/visualization/</loc>
+         <lastmod>2026-03-21</lastmod>
+    </url>
+</urlset>
