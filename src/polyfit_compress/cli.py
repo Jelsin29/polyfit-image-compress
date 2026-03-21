@@ -5,11 +5,13 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+import numpy as np
 import typer
+from numpy.typing import NDArray
 from skimage import io as skio
 
 from polyfit_compress.compressor import LeastSquaresCompressor
-from polyfit_compress.io import HEADER_SIZE, PficHeader, load_pfic, save_pfic
+from polyfit_compress.io import MODEL_TYPE_MAP, PficHeader, load_pfic, save_pfic
 from polyfit_compress.metrics import psnr, ssim
 from polyfit_compress.models import LinearModel, QuadraticModel
 
@@ -19,10 +21,18 @@ app = typer.Typer(
     add_completion=False,
 )
 
-MODEL_REGISTRY: dict[str, type] = {
+MODEL_REGISTRY: dict[str, type[LinearModel | QuadraticModel]] = {
     "linear": LinearModel,
     "quadratic": QuadraticModel,
 }
+
+
+def _load_image(path: Path) -> NDArray[np.uint8]:
+    """Load an image and convert RGBA to RGB if needed."""
+    image = skio.imread(str(path))
+    if image.ndim == 3 and image.shape[2] == 4:
+        image = image[:, :, :3]
+    return image
 
 
 def _resolve_model(name: str) -> LinearModel | QuadraticModel:
@@ -64,12 +74,7 @@ def compress(
             typer.echo(f"Error: Input file not found: {input_path}", err=True)
             raise typer.Exit(code=1)
 
-        image = skio.imread(str(input_path))
-
-        # Convert RGBA to RGB if needed
-        if image.ndim == 3 and image.shape[2] == 4:
-            image = image[:, :, :3]
-
+        image = _load_image(input_path)
         poly_model = _resolve_model(model)
         compressor = LeastSquaresCompressor(poly_model, block_size=block_size)
         result = compressor.compress(image)
@@ -84,7 +89,7 @@ def compress(
         typer.echo(f"  Compressed size: {compressed_kb:.1f} KB")
         typer.echo(f"  Ratio:           {result.compression_ratio:.2f}x")
         typer.echo(f"  PSNR:            {psnr_val:.2f} dB")
-    except typer.Exit:
+    except (typer.Exit, typer.BadParameter):
         raise
     except Exception as exc:
         typer.echo(f"Error: {exc}", err=True)
@@ -104,8 +109,7 @@ def decompress(
 
         header, coefficients = load_pfic(input_path)
 
-        model_type_map = {0: LinearModel, 1: QuadraticModel}
-        model_cls = model_type_map.get(header.model_type)
+        model_cls = MODEL_TYPE_MAP.get(header.model_type)
         if model_cls is None:
             typer.echo(f"Error: Unknown model type: {header.model_type}", err=True)
             raise typer.Exit(code=1)
@@ -125,7 +129,7 @@ def decompress(
 
         skio.imsave(str(output_path), reconstructed)
         typer.echo(f"Decompressed: {input_path} -> {output_path}")
-    except typer.Exit:
+    except (typer.Exit, typer.BadParameter):
         raise
     except Exception as exc:
         typer.echo(f"Error: {exc}", err=True)
@@ -143,11 +147,7 @@ def info(
             raise typer.Exit(code=1)
 
         raw = input_path.read_bytes()
-        if len(raw) < HEADER_SIZE:
-            typer.echo("Error: File too short to contain a valid header.", err=True)
-            raise typer.Exit(code=1)
-
-        header = PficHeader.unpack(raw[:HEADER_SIZE])
+        header = PficHeader.unpack(raw)
 
         model_names = {0: "linear", 1: "quadratic"}
         model_name = model_names.get(header.model_type, f"unknown({header.model_type})")
@@ -159,7 +159,7 @@ def info(
         typer.echo(f"  Block size: {header.block_size}")
         typer.echo(f"  Model:      {model_name}")
         typer.echo(f"  Padding:    {header.padding_width}x{header.padding_height}")
-    except typer.Exit:
+    except (typer.Exit, typer.BadParameter):
         raise
     except Exception as exc:
         typer.echo(f"Error: {exc}", err=True)
@@ -179,11 +179,7 @@ def benchmark(
             typer.echo(f"Error: Input file not found: {input_path}", err=True)
             raise typer.Exit(code=1)
 
-        image = skio.imread(str(input_path))
-
-        # Convert RGBA to RGB if needed
-        if image.ndim == 3 and image.shape[2] == 4:
-            image = image[:, :, :3]
+        image = _load_image(input_path)
 
         models_to_test = list(MODEL_REGISTRY.keys())
         if model_filter is not None:
@@ -225,7 +221,7 @@ def benchmark(
                     f"{model_name:<12} {bs:<6} {psnr_val:<12.2f} "
                     f"{ssim_val:<8.4f} {result.compression_ratio:<8.2f} {elapsed:<10.3f}"
                 )
-    except typer.Exit:
+    except (typer.Exit, typer.BadParameter):
         raise
     except Exception as exc:
         typer.echo(f"Error: {exc}", err=True)

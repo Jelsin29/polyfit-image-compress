@@ -133,8 +133,11 @@ class TestDecompress:
         pfic_path = tmp_path / "compressed.pfic"
         out_path = tmp_path / "restored.png"
 
-        runner.invoke(app, ["compress", str(img_path), str(pfic_path)])
-        runner.invoke(app, ["decompress", str(pfic_path), str(out_path)])
+        result_c = runner.invoke(app, ["compress", str(img_path), str(pfic_path)])
+        assert result_c.exit_code == 0, result_c.output
+
+        result_d = runner.invoke(app, ["decompress", str(pfic_path), str(out_path)])
+        assert result_d.exit_code == 0, result_d.output
 
         original = skio.imread(str(img_path))
         restored = skio.imread(str(out_path))
@@ -150,7 +153,8 @@ class TestInfo:
         img_path = _create_test_image(tmp_path / "test.png")
         pfic_path = tmp_path / "compressed.pfic"
 
-        runner.invoke(app, ["compress", str(img_path), str(pfic_path)])
+        result_c = runner.invoke(app, ["compress", str(img_path), str(pfic_path)])
+        assert result_c.exit_code == 0, result_c.output
 
         result = runner.invoke(app, ["info", str(pfic_path)])
 
@@ -161,6 +165,14 @@ class TestInfo:
         assert "channels" in output
         assert "block size" in output
         assert "model" in output
+
+    def test_decompress_missing_file(self, tmp_path: Path) -> None:
+        """Decompressing a non-existent file should exit with error."""
+        result = runner.invoke(
+            app,
+            ["decompress", str(tmp_path / "nonexistent.pfic"), str(tmp_path / "out.png")],
+        )
+        assert result.exit_code != 0
 
 
 class TestBenchmark:
@@ -178,3 +190,11 @@ class TestBenchmark:
         assert "ssim" in output
         assert "linear" in output
         assert "quadratic" in output
+
+    def test_benchmark_invalid_model(self, tmp_path: Path) -> None:
+        """Benchmark with invalid model filter should exit with error."""
+        img_path = _create_test_image(tmp_path / "test.png")
+
+        result = runner.invoke(app, ["benchmark", str(img_path), "--model", "invalid"])
+
+        assert result.exit_code != 0
