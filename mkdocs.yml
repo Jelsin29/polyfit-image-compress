@@ -1,0 +1,18 @@
+site_name: polyfit-image-compress
+site_description: Image compression via polynomial surface fitting
+repo_url: https://github.com/Jelsin29/polyfit-image-compress
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - API Reference: api/
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
