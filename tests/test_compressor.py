@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from polyfit_compress.compressor import LeastSquaresCompressor, CompressionResult
-from polyfit_compress.models import LinearModel, QuadraticModel
+from polyfit_compress.compressor import CompressionResult, LeastSquaresCompressor
 from polyfit_compress.exceptions import InvalidBlockSizeError, UnsupportedImageFormatError
+from polyfit_compress.models import LinearModel, QuadraticModel
 
 
 class TestLeastSquaresCompressor:
@@ -94,11 +94,92 @@ class TestLeastSquaresCompressor:
         assert result.compression_ratio == pytest.approx(expected)
 
     def test_linear_compresses_more_than_quadratic(self, sample_grayscale) -> None:
-        linear_result = LeastSquaresCompressor(model=LinearModel(), block_size=8).compress(sample_grayscale)
-        quad_result = LeastSquaresCompressor(model=QuadraticModel(), block_size=8).compress(sample_grayscale)
+        linear_result = LeastSquaresCompressor(model=LinearModel(), block_size=8).compress(
+            sample_grayscale
+        )
+        quad_result = LeastSquaresCompressor(model=QuadraticModel(), block_size=8).compress(
+            sample_grayscale
+        )
         assert linear_result.compression_ratio > quad_result.compression_ratio
 
     def test_tiny_image_single_block(self, tiny_image) -> None:
         compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
         result = compressor.compress(tiny_image)
         assert result.reconstructed.shape == tiny_image.shape
+
+    def test_original_shape_populated(self, sample_grayscale) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=8)
+        result = compressor.compress(sample_grayscale)
+        assert result.original_shape == sample_grayscale.shape
+
+    def test_padded_shape_populated(self, sample_grayscale) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=8)
+        result = compressor.compress(sample_grayscale)
+        pad_h, pad_w = result.padded_shape
+        assert pad_h % 8 == 0
+        assert pad_w % 8 == 0
+        assert pad_h >= sample_grayscale.shape[0]
+        assert pad_w >= sample_grayscale.shape[1]
+
+    def test_original_shape_rgb(self, sample_rgb) -> None:
+        compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
+        result = compressor.compress(sample_rgb)
+        assert result.original_shape == sample_rgb.shape
+
+
+class TestDecompress:
+    """Tests for LeastSquaresCompressor.decompress."""
+
+    def test_decompress_grayscale_roundtrip(self, sample_grayscale) -> None:
+        compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
+        result = compressor.compress(sample_grayscale)
+        reconstructed = compressor.decompress(
+            result.coefficients, result.original_shape, result.padded_shape
+        )
+        assert reconstructed.shape == sample_grayscale.shape
+        assert reconstructed.dtype == np.uint8
+
+    def test_decompress_rgb_roundtrip(self, sample_rgb) -> None:
+        compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
+        result = compressor.compress(sample_rgb)
+        reconstructed = compressor.decompress(
+            result.coefficients, result.original_shape, result.padded_shape
+        )
+        assert reconstructed.shape == sample_rgb.shape
+        assert reconstructed.dtype == np.uint8
+
+    def test_decompress_matches_compress_output(self, sample_grayscale) -> None:
+        """Decompress should produce image very close to compress output.
+
+        Small differences (up to 1 pixel) are expected because compress()
+        reconstructs in float64 before clipping, while decompress() works
+        from float32 coefficients.
+        """
+        compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
+        result = compressor.compress(sample_grayscale)
+        reconstructed = compressor.decompress(
+            result.coefficients, result.original_shape, result.padded_shape
+        )
+        # Allow at most 1 pixel difference due to float32 quantization
+        assert np.max(np.abs(reconstructed.astype(int) - result.reconstructed.astype(int))) <= 1
+
+    def test_decompress_non_square(self) -> None:
+        img = np.random.default_rng(42).integers(0, 256, size=(50, 70), dtype=np.uint8)
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=8)
+        result = compressor.compress(img)
+        reconstructed = compressor.decompress(
+            result.coefficients, result.original_shape, result.padded_shape
+        )
+        assert reconstructed.shape == (50, 70)
+
+    def test_decompress_coefficient_shape_mismatch(self) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=8)
+        bad_coeffs = np.zeros((10, 10), dtype=np.float32)  # wrong shape
+        with pytest.raises(ValueError, match="does not match expected"):
+            compressor.decompress(bad_coeffs, (64, 64), (64, 64))
+
+    def test_decompress_wrong_ndim(self) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=8)
+        bad_coeffs = np.zeros((10,), dtype=np.float32)
+        with pytest.raises(ValueError, match="must be 2D or 3D"):
+            compressor.decompress(bad_coeffs, (64, 64), (64, 64))

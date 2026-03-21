@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import numpy as np
 from numpy.typing import NDArray
 
 from polyfit_compress.quantum import require_quantum
@@ -21,4 +20,6 @@ class HybridCompressor:
 
         Not yet implemented — coming in Phase 3.
         """
-        raise NotImplementedError("HybridCompressor.compress not yet implemented — coming in Phase 3")
+        raise NotImplementedError(
+            "HybridCompressor.compress not yet implemented — coming in Phase 3"
+        )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 try:
     import pennylane as qml
+
     QUANTUM_AVAILABLE = True
 except ImportError:
     QUANTUM_AVAILABLE = False

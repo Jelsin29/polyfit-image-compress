@@ -23,6 +23,8 @@ class CompressionResult:
     original_size_bytes: int
     block_size: int
     model_name: str
+    original_shape: tuple[int, ...]
+    padded_shape: tuple[int, int]
 
     @property
     def compression_ratio(self) -> float:
@@ -51,13 +53,15 @@ class LeastSquaresCompressor:
     def compress(self, image: NDArray) -> CompressionResult:
         """Compress an image. Accepts grayscale (H,W) or RGB (H,W,3)."""
         image = self._validate_image(image)
+        original_shape = image.shape
 
         if image.ndim == 3:
             # RGB: process each channel independently
             channel_coeffs = []
             channel_reconstructed = []
+            padded = (0, 0)
             for c in range(3):
-                coeffs, reconstructed = self._compress_channel(image[:, :, c])
+                coeffs, reconstructed, padded = self._compress_channel(image[:, :, c])
                 channel_coeffs.append(coeffs)
                 channel_reconstructed.append(reconstructed)
             all_coeffs = np.stack(channel_coeffs, axis=0)
@@ -65,7 +69,7 @@ class LeastSquaresCompressor:
             original_size_bytes = image.shape[0] * image.shape[1] * 3
         else:
             # Grayscale
-            all_coeffs, reconstructed_image = self._compress_channel(image)
+            all_coeffs, reconstructed_image, padded = self._compress_channel(image)
             original_size_bytes = image.shape[0] * image.shape[1]
 
         final_image = np.clip(reconstructed_image, 0, 255).astype(np.uint8)
@@ -79,10 +83,128 @@ class LeastSquaresCompressor:
             original_size_bytes=original_size_bytes,
             block_size=self.block_size,
             model_name=self.model.name,
+            original_shape=original_shape,
+            padded_shape=padded,
         )
 
-    def _compress_channel(self, channel: NDArray[np.float64]) -> tuple[NDArray[np.float32], NDArray[np.float64]]:
-        """Compress a single grayscale channel."""
+    def decompress(
+        self,
+        coefficients: NDArray,
+        original_shape: tuple[int, ...],
+        padded_shape: tuple[int, int],
+    ) -> NDArray[np.uint8]:
+        """Reconstruct an image from coefficients.
+
+        Parameters
+        ----------
+        coefficients : NDArray
+            Coefficient array from compression. Shape is either
+            ``(num_coeffs, num_blocks)`` for grayscale or
+            ``(channels, num_coeffs, num_blocks)`` for RGB.
+        original_shape : tuple[int, ...]
+            Original image shape before padding.
+        padded_shape : tuple[int, int]
+            Image shape after padding (height, width).
+
+        Returns
+        -------
+        NDArray[np.uint8]
+            Reconstructed image clipped to [0, 255].
+
+        Raises
+        ------
+        ValueError
+            If coefficient dimensions don't match expected block layout.
+        """
+        pad_h, pad_w = padded_shape
+        if pad_h % self.block_size != 0 or pad_w % self.block_size != 0:
+            raise ValueError(
+                f"padded_shape {padded_shape} is not divisible by block_size {self.block_size}"
+            )
+        n_block_rows = pad_h // self.block_size
+        n_block_cols = pad_w // self.block_size
+        expected_blocks = n_block_rows * n_block_cols
+        num_coeffs = self.model.num_coefficients
+
+        if coefficients.ndim == 3:
+            # RGB: (channels, num_coeffs, num_blocks)
+            channels = coefficients.shape[0]
+            if coefficients.shape[1] != num_coeffs or coefficients.shape[2] != expected_blocks:
+                raise ValueError(
+                    f"Coefficient shape {coefficients.shape} does not match expected "
+                    f"({channels}, {num_coeffs}, {expected_blocks})"
+                )
+            channel_images = []
+            for c in range(channels):
+                channel_images.append(
+                    self._reconstruct_channel(
+                        coefficients[c], n_block_rows, n_block_cols, pad_h, pad_w
+                    )
+                )
+            reconstructed = np.stack(channel_images, axis=-1)
+        elif coefficients.ndim == 2:
+            # Grayscale: (num_coeffs, num_blocks)
+            if coefficients.shape[0] != num_coeffs or coefficients.shape[1] != expected_blocks:
+                raise ValueError(
+                    f"Coefficient shape {coefficients.shape} does not match expected "
+                    f"({num_coeffs}, {expected_blocks})"
+                )
+            reconstructed = self._reconstruct_channel(
+                coefficients, n_block_rows, n_block_cols, pad_h, pad_w
+            )
+        else:
+            raise ValueError(f"Coefficients must be 2D or 3D, got {coefficients.ndim}D")
+
+        # Crop to original shape
+        h, w = original_shape[0], original_shape[1]
+        reconstructed = reconstructed[:h, :w]
+
+        return np.clip(reconstructed, 0, 255).astype(np.uint8)
+
+    def _reconstruct_channel(
+        self,
+        coeffs: NDArray,
+        n_block_rows: int,
+        n_block_cols: int,
+        pad_h: int,
+        pad_w: int,
+    ) -> NDArray[np.float64]:
+        """Reconstruct a single channel from coefficients.
+
+        Parameters
+        ----------
+        coeffs : NDArray
+            Coefficient matrix of shape ``(num_coeffs, num_blocks)``.
+        n_block_rows : int
+            Number of block rows in the padded image.
+        n_block_cols : int
+            Number of block columns in the padded image.
+        pad_h : int
+            Padded image height.
+        pad_w : int
+            Padded image width.
+
+        Returns
+        -------
+        NDArray[np.float64]
+            Reconstructed channel of shape ``(pad_h, pad_w)``.
+        """
+        reconstructed_flat = self.design_matrix @ coeffs
+        reconstructed_blocks = reconstructed_flat.T.reshape(
+            n_block_rows, n_block_cols, self.block_size, self.block_size
+        )
+        return reconstructed_blocks.transpose(0, 2, 1, 3).reshape(pad_h, pad_w)
+
+    def _compress_channel(
+        self, channel: NDArray[np.float64]
+    ) -> tuple[NDArray[np.float32], NDArray[np.float64], tuple[int, int]]:
+        """Compress a single grayscale channel.
+
+        Returns
+        -------
+        tuple[NDArray[np.float32], NDArray[np.float64], tuple[int, int]]
+            Coefficients, reconstructed channel, and padded shape (height, width).
+        """
         h, w = channel.shape
 
         # Pad to make dimensions divisible by block_size
@@ -109,14 +231,12 @@ class LeastSquaresCompressor:
         reconstructed_blocks = reconstructed_flat.T.reshape(
             n_rows, n_cols, self.block_size, self.block_size
         )
-        reconstructed_image = reconstructed_blocks.transpose(0, 2, 1, 3).reshape(
-            new_h, new_w
-        )
+        reconstructed_image = reconstructed_blocks.transpose(0, 2, 1, 3).reshape(new_h, new_w)
 
         # Crop to original size
         reconstructed_channel = reconstructed_image[:h, :w]
 
-        return coeffs.astype(np.float32), reconstructed_channel
+        return coeffs.astype(np.float32), reconstructed_channel, (new_h, new_w)
 
     def _validate_image(self, image: NDArray) -> NDArray:
         """Validate and normalize input image."""

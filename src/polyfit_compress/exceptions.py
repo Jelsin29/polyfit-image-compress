@@ -14,4 +14,15 @@ class UnsupportedImageFormatError(PolyfitError):
 
 
 class CorruptedFileError(PolyfitError):
-    """Raised when a .pfic file is corrupted."""
+    """Raised when a .pfic file is invalid or corrupted."""
+
+    def __init__(self, detail: str = "File is corrupted or invalid") -> None:
+        super().__init__(detail)
+
+
+class IncompatibleVersionError(PolyfitError):
+    """Raised when a .pfic file version is unsupported."""
+
+    def __init__(self, version: int) -> None:
+        super().__init__(f"Incompatible .pfic version: found {version}, expected 1")
+        self.version = version
