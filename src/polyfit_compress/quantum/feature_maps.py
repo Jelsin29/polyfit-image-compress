@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import NDArray
 
-from polyfit_compress.quantum import require_quantum
+from polyfit_compress.quantum._guard import require_quantum
 
 
 class QuantumFeatureMap:
@@ -64,10 +64,11 @@ class QuantumFeatureMap:
 
         @qml.qnode(dev)
         def feature_circuit(x: float, y: float) -> list[float]:
-            """Encode (x, y) as RY rotations, entangle, measure PauliZ."""
+            """Encode (x, y) independently on alternating qubits, entangle, measure PauliZ."""
             for i in range(n_qubits):
-                qml.RY(x * np.pi / block_size, wires=i)
-                qml.RY(y * np.pi / block_size, wires=i)
+                # Even qubits encode x, odd qubits encode y
+                angle = x if i % 2 == 0 else y
+                qml.RY(angle * np.pi / block_size, wires=i)
             for i in range(n_qubits - 1):
                 qml.CNOT(wires=[i, i + 1])
             return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
