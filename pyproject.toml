@@ -40,6 +40,8 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.0",
 ]
+demo = ["gradio>=4.0"]
+docs = ["mkdocs>=1.5", "mkdocs-material>=9.0", "mkdocstrings[python]>=0.24"]
 all = ["polyfit-image-compress[quantum,viz,dev]"]
 
 [project.scripts]

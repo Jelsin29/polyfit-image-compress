@@ -38,3 +38,7 @@ benchmarks/results/
 # Internal development docs
 DOCS/
 .claude/uv.lock
+
+# Generated outputs
+examples/output/
+site/
