@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from polyfit_compress.metrics import psnr, mse, ssim, compression_ratio
+from polyfit_compress.metrics import compression_ratio, mse, psnr, ssim
 
 
 class TestMSE:
