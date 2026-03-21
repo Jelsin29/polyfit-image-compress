@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -17,9 +19,12 @@ def normalize_state(vector: NDArray[np.float64]) -> NDArray[np.float64]:
     Returns
     -------
     NDArray[np.float64]
-        Unit-normalized vector.
+        Unit-normalized vector. Returns zeros if input is a zero vector.
     """
-    raise NotImplementedError("Stub — implement in quantum-solver/vqls")
+    norm = np.linalg.norm(vector)
+    if norm < 1e-15:
+        return np.zeros_like(vector)
+    return vector / norm
 
 
 def prepare_b_state(b: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -37,7 +42,11 @@ def prepare_b_state(b: NDArray[np.float64]) -> NDArray[np.float64]:
     NDArray[np.float64]
         Padded and normalized state vector.
     """
-    raise NotImplementedError("Stub — implement in quantum-solver/vqls")
+    size = len(b)
+    next_pow2 = 1 << math.ceil(math.log2(max(size, 1)))
+    padded = np.zeros(next_pow2, dtype=np.float64)
+    padded[:size] = b
+    return normalize_state(padded)
 
 
 def extract_coefficients(
@@ -61,7 +70,8 @@ def extract_coefficients(
     NDArray[np.float64]
         Real-valued polynomial coefficients.
     """
-    raise NotImplementedError("Stub — implement in quantum-solver/vqls")
+    raw = np.real(statevector[:num_coefficients])
+    return raw * norm
 
 
 def calculate_n_qubits(system_size: int) -> int:
@@ -75,6 +85,8 @@ def calculate_n_qubits(system_size: int) -> int:
     Returns
     -------
     int
-        Number of qubits (ceil(log2(system_size))).
+        Number of qubits (ceil(log2(system_size))), minimum 1.
     """
-    raise NotImplementedError("Stub — implement in quantum-solver/vqls")
+    if system_size <= 1:
+        return 1
+    return math.ceil(math.log2(system_size))
