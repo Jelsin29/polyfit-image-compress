@@ -25,6 +25,7 @@ from polyfit_compress.quantum.utils import (  # noqa: E402
     normalize_state,
     prepare_b_state,
 )
+from polyfit_compress.quantum.vqls import VQLSConfig, VQLSSolver  # noqa: E402
 
 __all__ = [
     "QUANTUM_AVAILABLE",
@@ -33,4 +34,6 @@ __all__ = [
     "extract_coefficients",
     "normalize_state",
     "prepare_b_state",
+    "VQLSConfig",
+    "VQLSSolver",
 ]
