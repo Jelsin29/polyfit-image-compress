@@ -37,6 +37,11 @@ class TestLinearModel:
         with pytest.raises(ValueError):
             model.build_design_matrix(0)
 
+    def test_invalid_block_size_negative(self) -> None:
+        model = LinearModel()
+        with pytest.raises(ValueError):
+            model.build_design_matrix(-5)
+
     def test_implements_protocol(self) -> None:
         assert isinstance(LinearModel(), PolynomialModel)
 

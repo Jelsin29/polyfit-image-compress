@@ -33,13 +33,14 @@ class LeastSquaresCompressor:
     """Image compressor using polynomial surface fitting via least squares."""
 
     def __init__(self, model: PolynomialModel, block_size: int = 8) -> None:
-        if not isinstance(block_size, int):
+        if not isinstance(block_size, (int, np.integer)):
             raise InvalidBlockSizeError(
                 f"block_size must be an integer, got {type(block_size).__name__}"
             )
         if block_size < 2 or block_size > 64:
             raise InvalidBlockSizeError(
-                f"block_size must be between 2 and 64, got {block_size}"
+                f"block_size must be between 2 and 64 (upper bound prevents "
+                f"numerical instability in pseudoinverse), got {block_size}"
             )
 
         self.model = model

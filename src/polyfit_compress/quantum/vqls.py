@@ -14,6 +14,9 @@ def solve_least_squares_quantum(
     n_layers: int = 4,
     max_iterations: int = 200,
 ) -> NDArray[np.float64]:
-    """Solve least squares using Variational Quantum Linear Solver."""
+    """Solve least squares using Variational Quantum Linear Solver.
+
+    Not yet implemented — coming in Phase 3.
+    """
     require_quantum()
-    raise NotImplementedError
+    raise NotImplementedError("VQLS solver is not yet implemented — coming in Phase 3")

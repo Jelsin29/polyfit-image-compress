@@ -21,6 +21,23 @@ class PolynomialModel(Protocol):
     def build_design_matrix(self, block_size: int) -> NDArray[np.float64]: ...
 
 
+def _make_coords(block_size: int) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    """Build flattened coordinate vectors for a block.
+
+    Returns:
+        Tuple of (ones, x_flat, y_flat) arrays, each of length block_size².
+    """
+    if block_size <= 0:
+        raise ValueError(f"block_size must be positive, got {block_size}")
+
+    coords = np.linspace(0, block_size - 1, block_size)
+    X, Y = np.meshgrid(coords, coords)
+    x_flat: NDArray[np.float64] = X.flatten()
+    y_flat: NDArray[np.float64] = Y.flatten()
+    ones: NDArray[np.float64] = np.ones_like(x_flat)
+    return ones, x_flat, y_flat
+
+
 class LinearModel:
     """Linear polynomial surface: z = c0 + c1*x + c2*y"""
 
@@ -33,15 +50,7 @@ class LinearModel:
         return "linear"
 
     def build_design_matrix(self, block_size: int) -> NDArray[np.float64]:
-        if block_size <= 0:
-            raise ValueError(f"block_size must be positive, got {block_size}")
-
-        coords = np.linspace(0, block_size - 1, block_size)
-        X, Y = np.meshgrid(coords, coords)
-        x_flat: NDArray[np.float64] = X.flatten()
-        y_flat: NDArray[np.float64] = Y.flatten()
-        ones: NDArray[np.float64] = np.ones_like(x_flat)
-
+        ones, x_flat, y_flat = _make_coords(block_size)
         return np.column_stack((ones, x_flat, y_flat))
 
 
@@ -57,15 +66,7 @@ class QuadraticModel:
         return "quadratic"
 
     def build_design_matrix(self, block_size: int) -> NDArray[np.float64]:
-        if block_size <= 0:
-            raise ValueError(f"block_size must be positive, got {block_size}")
-
-        coords = np.linspace(0, block_size - 1, block_size)
-        X, Y = np.meshgrid(coords, coords)
-        x_flat: NDArray[np.float64] = X.flatten()
-        y_flat: NDArray[np.float64] = Y.flatten()
-        ones: NDArray[np.float64] = np.ones_like(x_flat)
-
+        ones, x_flat, y_flat = _make_coords(block_size)
         return np.column_stack((
             ones, x_flat, y_flat,
             x_flat * y_flat, x_flat**2, y_flat**2,

@@ -9,6 +9,9 @@ from polyfit_compress.quantum import require_quantum
 
 
 def quantum_design_matrix(block_size: int, n_qubits: int = 4) -> NDArray[np.float64]:
-    """Build design matrix using quantum feature map expectation values."""
+    """Build design matrix using quantum feature map expectation values.
+
+    Not yet implemented — coming in Phase 3.
+    """
     require_quantum()
-    raise NotImplementedError
+    raise NotImplementedError("Quantum feature maps not yet implemented — coming in Phase 3")

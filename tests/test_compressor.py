@@ -42,6 +42,26 @@ class TestLeastSquaresCompressor:
         with pytest.raises(InvalidBlockSizeError):
             LeastSquaresCompressor(model=LinearModel(), block_size=128)
 
+    def test_invalid_block_size_one(self) -> None:
+        with pytest.raises(InvalidBlockSizeError):
+            LeastSquaresCompressor(model=LinearModel(), block_size=1)
+
+    def test_invalid_block_size_65(self) -> None:
+        with pytest.raises(InvalidBlockSizeError):
+            LeastSquaresCompressor(model=LinearModel(), block_size=65)
+
+    def test_valid_block_size_boundary_min(self) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=2)
+        assert compressor.block_size == 2
+
+    def test_valid_block_size_boundary_max(self) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=64)
+        assert compressor.block_size == 64
+
+    def test_numpy_int_block_size(self) -> None:
+        compressor = LeastSquaresCompressor(model=LinearModel(), block_size=np.int64(8))
+        assert compressor.block_size == 8
+
     def test_invalid_block_size_float(self) -> None:
         with pytest.raises(InvalidBlockSizeError):
             LeastSquaresCompressor(model=LinearModel(), block_size=8.5)
@@ -66,6 +86,12 @@ class TestLeastSquaresCompressor:
         compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
         result = compressor.compress(sample_grayscale)
         assert result.compression_ratio > 0
+
+    def test_compression_ratio_equals_expected(self, sample_grayscale) -> None:
+        compressor = LeastSquaresCompressor(model=QuadraticModel(), block_size=8)
+        result = compressor.compress(sample_grayscale)
+        expected = result.original_size_bytes / result.compressed_size_bytes
+        assert result.compression_ratio == pytest.approx(expected)
 
     def test_linear_compresses_more_than_quadratic(self, sample_grayscale) -> None:
         linear_result = LeastSquaresCompressor(model=LinearModel(), block_size=8).compress(sample_grayscale)

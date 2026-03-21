@@ -60,7 +60,7 @@ def mse(original: NDArray, compressed: NDArray) -> float:
     return float(np.mean((orig - comp) ** 2))
 
 
-def ssim(original: NDArray, compressed: NDArray) -> float:
+def ssim(original: NDArray, compressed: NDArray, data_range: int = 255) -> float:
     """Calculate Structural Similarity Index.
 
     Uses skimage.metrics.structural_similarity internally.
@@ -68,6 +68,7 @@ def ssim(original: NDArray, compressed: NDArray) -> float:
     Args:
         original: Original image array.
         compressed: Compressed image array (must match original shape).
+        data_range: Maximum possible pixel value (default 255 for uint8).
 
     Returns:
         SSIM value between -1 and 1 (1 means identical).
@@ -89,7 +90,7 @@ def ssim(original: NDArray, compressed: NDArray) -> float:
         structural_similarity(
             original,
             compressed,
-            data_range=255,
+            data_range=data_range,
             channel_axis=channel_axis,
         )
     )
@@ -108,6 +109,10 @@ def compression_ratio(original_bytes: int, compressed_bytes: int) -> float:
     Raises:
         ValueError: If compressed_bytes is zero or negative.
     """
+    if original_bytes < 0:
+        raise ValueError(
+            f"original_bytes must be non-negative, got {original_bytes}"
+        )
     if compressed_bytes <= 0:
         raise ValueError(
             f"compressed_bytes must be positive, got {compressed_bytes}"

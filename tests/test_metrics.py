@@ -54,6 +54,15 @@ class TestSSIM:
         with pytest.raises(ValueError):
             ssim(np.zeros((32, 32)), np.zeros((32, 33)))
 
+    def test_identical_rgb_images(self) -> None:
+        img = np.random.default_rng(42).integers(0, 256, size=(32, 32, 3), dtype=np.uint8)
+        assert ssim(img, img) == pytest.approx(1.0)
+
+    def test_custom_data_range(self) -> None:
+        img = np.random.default_rng(42).integers(0, 256, size=(32, 32), dtype=np.uint8)
+        result_255 = ssim(img, img, data_range=255)
+        assert result_255 == pytest.approx(1.0)
+
 
 class TestCompressionRatio:
     def test_basic(self) -> None:
@@ -69,3 +78,7 @@ class TestCompressionRatio:
     def test_invalid_negative_compressed(self) -> None:
         with pytest.raises(ValueError):
             compression_ratio(100, -1)
+
+    def test_invalid_negative_original(self) -> None:
+        with pytest.raises(ValueError):
+            compression_ratio(-1, 100)

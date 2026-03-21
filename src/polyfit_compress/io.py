@@ -15,10 +15,16 @@ FORMAT_VERSION = 1
 
 
 def save(path: str | Path, result: CompressionResult) -> None:
-    """Save compression result to .pfic file."""
-    raise NotImplementedError
+    """Save compression result to .pfic file.
+
+    Not yet implemented — coming in Phase 2.
+    """
+    raise NotImplementedError("save() is not yet implemented — coming in Phase 2")
 
 
 def load(path: str | Path) -> dict:
-    """Load a .pfic file and return metadata + coefficients."""
-    raise NotImplementedError
+    """Load a .pfic file and return metadata + coefficients.
+
+    Not yet implemented — coming in Phase 2.
+    """
+    raise NotImplementedError("load() is not yet implemented — coming in Phase 2")
